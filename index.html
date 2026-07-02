@@ -9,16 +9,43 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
     <style>
       /* make carousel horizontally scrollable for swipe */
-      .carousel { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
-      .carousel-item { scroll-snap-align: center; flex: 0 0 100%; }
-      
+      .carousel {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
+      .carousel-item {
+        scroll-snap-align: center;
+        scroll-snap-stop: always;
+        flex: 0 0 100%;
+      }
+
       /* Fading animation for booster opening */
       @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.92); }
       }
       .booster-open {
-        animation: fadeOut 0.6s ease-out forwards;
+        animation: fadeOut 0.5s ease-out forwards;
+      }
+
+      @keyframes popIn {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        60% { transform: scale(1.04); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .carousel-reveal {
+        animation: popIn 0.5s ease-out both;
+      }
+
+      @keyframes cardBounce {
+        0% { transform: translateY(8px) scale(0.97); }
+        50% { transform: translateY(-6px) scale(1.01); }
+        100% { transform: translateY(0) scale(1); }
+      }
+      .carousel-item:first-child img {
+        animation: cardBounce 0.6s ease-out 0.2s both;
       }
     </style>
 </head>
@@ -37,43 +64,36 @@
         <div class="carousel-item w-full">
           <img
             src="assets/test_asset.png"
-            class="w-full"
             alt="Card 1" />
         </div>
-        <div class="carousel-item w-full">
+        <div class="carousel-item w-full ">
           <img
             src="https://img.daisyui.com/images/stock/photo-1565098772267-60af42b81ef2.webp"
-            class="w-full"
             alt="Card 2" />
         </div>
         <div class="carousel-item w-full">
           <img
             src="https://img.daisyui.com/images/stock/photo-1572635148818-ef6fd45eb394.webp"
-            class="w-full"
             alt="Card 3" />
         </div>
         <div class="carousel-item w-full">
           <img
             src="https://img.daisyui.com/images/stock/photo-1494253109108-2e30c049369b.webp"
-            class="w-full"
             alt="Card 4" />
         </div>
         <div class="carousel-item w-full">
           <img
             src="https://img.daisyui.com/images/stock/photo-1550258987-190a2d41a8ba.webp"
-            class="w-full"
             alt="Card 5" />
         </div>
         <div class="carousel-item w-full">
           <img
             src="https://img.daisyui.com/images/stock/photo-1559181567-c3190ca9959b.webp"
-            class="w-full"
             alt="Card 6" />
         </div>
         <div class="carousel-item w-full">
           <img
             src="https://img.daisyui.com/images/stock/photo-1601004890684-d8cbf643f5f2.webp"
-            class="w-full"
             alt="Card 7" />
         </div>
       </div>
@@ -95,7 +115,9 @@
         setTimeout(() => {
           booster.classList.add('hidden');
           carouselWrapper.classList.remove('hidden');
-        }, 600);
+          carouselWrapper.classList.add('carousel-reveal');
+          carousel.classList.add('carousel-reveal');
+        }, 450);
       });
       // Swipe functionality
       let startX = 0;
