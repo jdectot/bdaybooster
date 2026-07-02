@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question pour toi ❤️</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <style>
+      /* make carousel horizontally scrollable for swipe */
+      .carousel { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+      .carousel-item { scroll-snap-align: center; flex: 0 0 100%; }
+      
+      /* Fading animation for booster opening */
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+      .booster-open {
+        animation: fadeOut 0.6s ease-out forwards;
+      }
+    </style>
+</head>
+<body class="text-white min-h-screen w-full flex items-center justify-center bg-slate-950 p-3 sm:p-4">
+  <div class="w-64">
+    <h1 id="open_text" class="text-2xl font-bold mb-4 text-center">Clique pour ouvrir ❤️</h1>
+    <button id="booster" type="button" class="w-full rounded-box overflow-hidden shadow-2xl">
+      <img
+        src="assets/booster_test.png"
+        class="w-full"
+        alt="Booster opening" />
+    </button>
+
+    <div id="carousel-wrapper" class="hidden w-full">
+      <div id="carousel" class="carousel rounded-box w-full flex">
+        <div class="carousel-item w-full">
+          <img
+            src="assets/test_asset.png"
+            class="w-full"
+            alt="Card 1" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1565098772267-60af42b81ef2.webp"
+            class="w-full"
+            alt="Card 2" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1572635148818-ef6fd45eb394.webp"
+            class="w-full"
+            alt="Card 3" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1494253109108-2e30c049369b.webp"
+            class="w-full"
+            alt="Card 4" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1550258987-190a2d41a8ba.webp"
+            class="w-full"
+            alt="Card 5" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1559181567-c3190ca9959b.webp"
+            class="w-full"
+            alt="Card 6" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="https://img.daisyui.com/images/stock/photo-1601004890684-d8cbf643f5f2.webp"
+            class="w-full"
+            alt="Card 7" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Booster opening + carousel swipe
+    (function () {
+      const booster = document.getElementById('booster');
+      const carouselWrapper = document.getElementById('carousel-wrapper');
+      const carousel = document.getElementById('carousel');
+      const openText = document.getElementById('open_text');
+      if (!booster || !carouselWrapper || !carousel) return;
+      // If booster is clicked, hide it and the text and show the carousel after a short delay
+      booster.addEventListener('click', () => {
+        booster.classList.add('booster-open');
+        openText.textContent = "";
+        setTimeout(() => {
+          booster.classList.add('hidden');
+          carouselWrapper.classList.remove('hidden');
+        }, 600);
+      });
+      // Swipe functionality
+      let startX = 0;
+      let isDown = false;
+      carousel.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        isDown = true;
+      });
+
+      carousel.addEventListener('touchmove', (e) => {
+        if (!isDown) return;
+        const x = e.touches[0].clientX;
+        const dx = startX - x;
+        carousel.scrollLeft += dx;
+        startX = x;
+      }, { passive: true });
+
+      carousel.addEventListener('touchend', () => {
+        isDown = false;
+      });
+    })();
+  </script>
+</body>
+</html>
