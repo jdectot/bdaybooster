@@ -47,11 +47,58 @@
       .carousel-item:first-child img {
         animation: cardBounce 0.6s ease-out 0.2s both;
       }
+
+      @keyframes celebrationPop {
+        0% { transform: scale(0.9); opacity: 0.35; }
+        60% { transform: scale(1.06); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      @keyframes confettiFall {
+        0% {
+          transform: translate3d(0, 0, 0) rotate(0deg) scale(0.8);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate3d(var(--drift), 120vh, 0) rotate(720deg) scale(1);
+          opacity: 0;
+        }
+      }
+
+      .celebration-active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .celebration-piece {
+        position: absolute;
+        top: -20px;
+        width: 10px;
+        height: 16px;
+        border-radius: 2px;
+        box-shadow: 0 0 6px rgba(255,255,255,0.35);
+        animation: confettiFall 1.2s cubic-bezier(.2,.8,.2,1) forwards;
+        will-change: transform, opacity;
+        z-index: 60;
+      }
+
+      .celebration-pop {
+        animation: celebrationPop 0.45s ease-out both;
+      }
+
     </style>
 </head>
 <body class="text-white min-h-screen w-full flex items-center justify-center bg-slate-950 p-3 sm:p-4">
+  <div id="celebration" class="pointer-events-none fixed inset-0 z-[60] overflow-hidden opacity-0 invisible">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(244,114,182,0.45),_transparent_45%),linear-gradient(135deg,_rgba(248,113,113,0.28),_rgba(250,204,21,0.2),_rgba(56,189,248,0.22))]"></div>
+  </div>
+
   <div class="w-64">
     <h1 id="open_text" class="text-2xl font-bold mb-4 text-center">Clique pour ouvrir ❤️</h1>
+    <h1 id ="happy_bday" class="hidden text-2xl font-bold mb-4 text-center">Une carte spéciale pour une personne spéciale 🎉</h1>
     <button id="booster" type="button" class="w-full rounded-box overflow-hidden shadow-2xl">
       <img
         src="assets/booster_test.png"
@@ -98,7 +145,7 @@
         </div>
         <div class="carousel-item w-full">
           <img
-            src=""
+            src="assets/pachirisu_8.jpg"
             alt="Card 8" />
         </div>
       </div>
@@ -112,7 +159,50 @@
       const carouselWrapper = document.getElementById('carousel-wrapper');
       const carousel = document.getElementById('carousel');
       const openText = document.getElementById('open_text');
+      const birthdayText = document.getElementById('happy_bday');
+      const celebrationLayer = document.getElementById('celebration');
+
       if (!booster || !carouselWrapper || !carousel) return;
+
+      let celebrationTriggered = false;
+      let celebrationCheckTimeout = null;
+
+      const launchCelebration = () => {
+        if (celebrationTriggered || !celebrationLayer) return;
+        celebrationTriggered = true;
+
+        celebrationLayer.classList.add('celebration-active');
+        birthdayText.classList.remove('hidden');
+        birthdayText.classList.add('celebration-pop');
+        carouselWrapper.classList.add('celebration-pop');
+
+        const colors = ['#f472b6', '#facc15', '#38bdf8', '#fb7185', '#34d399', '#a78bfa'];
+        for (let i = 0; i < 28; i += 1) {
+          const piece = document.createElement('div');
+          piece.className = 'celebration-piece';
+          piece.style.left = `${Math.random() * 100}%`;
+          piece.style.background = colors[i % colors.length];
+          piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 240}px`);
+          piece.style.animationDelay = `${Math.random() * 0.07}s`;
+          celebrationLayer.appendChild(piece);
+        }
+
+        window.setTimeout(() => {
+          celebrationLayer.classList.remove('celebration-active');
+          celebrationLayer.querySelectorAll('.celebration-piece').forEach((node) => node.remove());
+        }, 1200);
+      };
+
+      const checkLastCardVisibility = () => {
+        const lastImage = carousel.lastElementChild;
+        if (!lastImage) return;
+        const rect = lastImage.getBoundingClientRect();
+        const carouselRect = carousel.getBoundingClientRect();
+        if (rect.left >= carouselRect.left && rect.right <= carouselRect.right) {
+          launchCelebration();
+        }
+      };
+
       // If booster is clicked, hide it and the text and show the carousel after a short delay
       booster.addEventListener('click', () => {
         booster.classList.add('booster-open');
@@ -122,6 +212,10 @@
           carouselWrapper.classList.remove('hidden');
           carouselWrapper.classList.add('carousel-reveal');
           carousel.classList.add('carousel-reveal');
+
+          window.setTimeout(() => {
+            checkLastCardVisibility();
+          }, 250);
         }, 450);
       });
       // Swipe functionality
@@ -142,6 +236,16 @@
 
       carousel.addEventListener('touchend', () => {
         isDown = false;
+      });
+
+      // if image 8 is fully visible, show the birthday text once and trigger the celebration
+      carousel.addEventListener('scroll', () => {
+        if (celebrationCheckTimeout) {
+          window.clearTimeout(celebrationCheckTimeout);
+        }
+        celebrationCheckTimeout = window.setTimeout(() => {
+          checkLastCardVisibility();
+        }, 120);
       });
     })();
   </script>
