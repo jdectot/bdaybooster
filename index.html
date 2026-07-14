@@ -68,6 +68,25 @@
         }
       }
 
+      @keyframes gentlePulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.04); }
+      }
+
+      .open-text-pulse {
+        animation: gentlePulse 1.2s ease-in-out infinite;
+      }
+
+
+      #confetti-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+      }
+
       .celebration-active {
         opacity: 1;
         visibility: visible;
@@ -92,16 +111,17 @@
     </style>
 </head>
 <body class="text-white min-h-screen w-full flex items-center justify-center bg-slate-950 p-3 sm:p-4">
+  <canvas id="confetti-canvas" class="hidden"></canvas>
   <div id="celebration" class="pointer-events-none fixed inset-0 z-[60] overflow-hidden opacity-0 invisible">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(244,114,182,0.45),_transparent_45%),linear-gradient(135deg,_rgba(248,113,113,0.28),_rgba(250,204,21,0.2),_rgba(56,189,248,0.22))]"></div>
   </div>
 
   <div class="w-64">
-    <h1 id="open_text" class="text-2xl font-bold mb-4 text-center">Clique pour ouvrir ❤️</h1>
+    <h1 id="open_text" class="open-text-pulse text-2xl font-bold mb-4 text-center">Clique pour ouvrir ❤️</h1>
     <h1 id ="happy_bday" class="hidden text-2xl font-bold mb-4 text-center">Une carte spéciale pour une personne spéciale 🎉</h1>
     <button id="booster" type="button" class="w-full rounded-box overflow-hidden shadow-2xl">
       <img
-        src="assets/booster_test.png"
+        src="assets/booster.png"
         class="w-full"
         alt="Booster opening" />
     </button>
@@ -145,7 +165,17 @@
         </div>
         <div class="carousel-item w-full">
           <img
-            src="assets/pachirisu_8.JPG"
+            src="assets/pachirisu_8.png"
+            alt="Card 8" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="assets/pachirisu_9.png"
+            alt="Card 9" />
+        </div>
+        <div class="carousel-item w-full">
+          <img
+            src="assets/pachirisu_10.JPG"
             alt="Card 8" />
         </div>
       </div>
@@ -161,11 +191,93 @@
       const openText = document.getElementById('open_text');
       const birthdayText = document.getElementById('happy_bday');
       const celebrationLayer = document.getElementById('celebration');
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      const confettiCtx = confettiCanvas ? confettiCanvas.getContext('2d') : null;
 
       if (!booster || !carouselWrapper || !carousel) return;
 
       let celebrationTriggered = false;
       let celebrationCheckTimeout = null;
+      let confettiAnimationFrame = null;
+      let confettiParticles = [];
+
+      const scheduleCelebrationCheck = () => {
+        if (celebrationCheckTimeout) {
+          window.clearTimeout(celebrationCheckTimeout);
+        }
+        celebrationCheckTimeout = window.setTimeout(() => {
+          checkLastCardVisibility();
+        }, 80);
+      };
+
+      const resizeConfettiCanvas = () => {
+        if (!confettiCanvas || !confettiCtx) return;
+        const dpr = window.devicePixelRatio || 1;
+        confettiCanvas.width = window.innerWidth * dpr;
+        confettiCanvas.height = window.innerHeight * dpr;
+        confettiCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      const launchConfetti = () => {
+        if (!confettiCanvas || !confettiCtx) return;
+
+        resizeConfettiCanvas();
+        confettiCanvas.classList.remove('hidden');
+        confettiParticles = [];
+
+        const colors = ['#f472b6', '#facc15', '#38bdf8', '#fb7185', '#34d399', '#a78bfa'];
+        for (let i = 0; i < 140; i += 1) {
+          confettiParticles.push({
+            x: Math.random() * window.innerWidth,
+            y: -20 - Math.random() * 40,
+            vx: (Math.random() - 0.5) * 4,
+            vy: 2 + Math.random() * 3,
+            size: 6 + Math.random() * 4,
+            color: colors[i % colors.length],
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.2,
+            opacity: 1,
+          });
+        }
+
+        const animateConfetti = () => {
+          confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+          confettiParticles.forEach((piece) => {
+            piece.x += piece.vx;
+            piece.y += piece.vy;
+            piece.vy += 0.03;
+            piece.rotation += piece.rotationSpeed;
+            piece.opacity -= 0.002;
+
+            if (piece.opacity <= 0 || piece.y > window.innerHeight + 20) return;
+
+            confettiCtx.save();
+            confettiCtx.globalAlpha = piece.opacity;
+            confettiCtx.translate(piece.x, piece.y);
+            confettiCtx.rotate(piece.rotation);
+            confettiCtx.fillStyle = piece.color;
+            confettiCtx.fillRect(-piece.size / 2, -piece.size / 2, piece.size, piece.size * 0.7);
+            confettiCtx.restore();
+          });
+
+          confettiParticles = confettiParticles.filter((piece) => piece.opacity > 0 && piece.y <= window.innerHeight + 40);
+
+          if (confettiParticles.length > 0) {
+            confettiAnimationFrame = window.requestAnimationFrame(animateConfetti);
+          } else {
+            confettiAnimationFrame = null;
+            confettiCanvas.classList.add('hidden');
+            confettiCtx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+          }
+        };
+
+        if (confettiAnimationFrame) {
+          window.cancelAnimationFrame(confettiAnimationFrame);
+        }
+
+        confettiAnimationFrame = window.requestAnimationFrame(animateConfetti);
+      };
 
       const launchCelebration = () => {
         if (celebrationTriggered || !celebrationLayer) return;
@@ -176,29 +288,23 @@
         birthdayText.classList.add('celebration-pop');
         carouselWrapper.classList.add('celebration-pop');
 
-        const colors = ['#f472b6', '#facc15', '#38bdf8', '#fb7185', '#34d399', '#a78bfa'];
-        for (let i = 0; i < 28; i += 1) {
-          const piece = document.createElement('div');
-          piece.className = 'celebration-piece';
-          piece.style.left = `${Math.random() * 100}%`;
-          piece.style.background = colors[i % colors.length];
-          piece.style.setProperty('--drift', `${(Math.random() - 0.5) * 240}px`);
-          piece.style.animationDelay = `${Math.random() * 0.07}s`;
-          celebrationLayer.appendChild(piece);
-        }
+        launchConfetti();
 
         window.setTimeout(() => {
           celebrationLayer.classList.remove('celebration-active');
-          celebrationLayer.querySelectorAll('.celebration-piece').forEach((node) => node.remove());
         }, 1200);
       };
 
       const checkLastCardVisibility = () => {
-        const lastImage = carousel.lastElementChild;
-        if (!lastImage) return;
-        const rect = lastImage.getBoundingClientRect();
+        const lastCard = carousel.lastElementChild;
+        if (!lastCard) return;
+
+        const lastCardRect = lastCard.getBoundingClientRect();
         const carouselRect = carousel.getBoundingClientRect();
-        if (rect.left >= carouselRect.left && rect.right <= carouselRect.right) {
+        const isAtCarouselEnd = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4;
+        const isLastCardVisible = lastCardRect.left >= carouselRect.left - 1 && lastCardRect.right <= carouselRect.right + 1;
+
+        if (isAtCarouselEnd || isLastCardVisible) {
           launchCelebration();
         }
       };
@@ -213,9 +319,11 @@
           carouselWrapper.classList.add('carousel-reveal');
           carousel.classList.add('carousel-reveal');
 
-          window.setTimeout(() => {
-            checkLastCardVisibility();
-          }, 250);
+          window.requestAnimationFrame(() => {
+            window.setTimeout(() => {
+              checkLastCardVisibility();
+            }, 250);
+          });
         }, 450);
       });
       // Swipe functionality
@@ -238,14 +346,14 @@
         isDown = false;
       });
 
-      // if image 8 is fully visible, show the birthday text once and trigger the celebration
+      // if image 10 is fully visible, show the birthday text once and trigger the celebration
       carousel.addEventListener('scroll', () => {
-        if (celebrationCheckTimeout) {
-          window.clearTimeout(celebrationCheckTimeout);
-        }
-        celebrationCheckTimeout = window.setTimeout(() => {
-          checkLastCardVisibility();
-        }, 120);
+        scheduleCelebrationCheck();
+      });
+
+      window.addEventListener('resize', () => {
+        scheduleCelebrationCheck();
+        resizeConfettiCanvas();
       });
     })();
   </script>
