@@ -207,7 +207,7 @@
         }
         celebrationCheckTimeout = window.setTimeout(() => {
           checkLastCardVisibility();
-        }, 80);
+        }, 20);
       };
 
       const resizeConfettiCanvas = () => {
@@ -297,14 +297,17 @@
 
       const checkLastCardVisibility = () => {
         const lastCard = carousel.lastElementChild;
-        if (!lastCard) return;
+        if (!lastCard || celebrationTriggered) return;
 
         const lastCardRect = lastCard.getBoundingClientRect();
         const carouselRect = carousel.getBoundingClientRect();
-        const isAtCarouselEnd = carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 4;
-        const isLastCardVisible = lastCardRect.left >= carouselRect.left - 1 && lastCardRect.right <= carouselRect.right + 1;
+        
+        // Vérifier que le scroll a réellement atteint la fin et que la dernière carte est visible
+        const scrollPercentage = (carousel.scrollLeft + carousel.clientWidth) / carousel.scrollWidth;
+        const isNearEnd = scrollPercentage > 0.95;
+        const isLastCardVisible = lastCardRect.right > carouselRect.right - 10 && lastCardRect.left < carouselRect.right;
 
-        if (isAtCarouselEnd || isLastCardVisible) {
+        if (isNearEnd && isLastCardVisible) {
           launchCelebration();
         }
       };
